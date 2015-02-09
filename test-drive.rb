@@ -3,6 +3,17 @@
 require 'jenkins_api_client'
 require 'uuidtools'
 require 'artii'
+require 'rainbow'
+
+COLORS = [
+    :red,
+    :green,
+    :yellow,
+    :blue,
+    :magenta,
+    :cyan,
+    :white
+]
 
 def jenkins_url
   '***REMOVED***'
@@ -54,6 +65,12 @@ def create_patch
   end
 end
 
+def rainbowize(string)
+  rainbow_string = ''
+  string.length.times { |i| rainbow_string << Rainbow(string[i]).color(COLORS[i % COLORS.length]) }
+  rainbow_string
+end
+
 # repo_name = `basename $(git remote show -n origin | grep Fetch | cut -d: -f2-)`.split('.').first
 
 @client = JenkinsApi::Client.new :server_url => jenkins_url,
@@ -77,10 +94,15 @@ start_test_driving(tracking_id)
 build = get_build_number(id_param, 120)
 
 result = print_jenkins_output(build, offset)
+
 if result == 'SUCCESS' || result == 'UNSTABLE'
-  puts Artii::Base.new(font: 'slant').asciify('T E S T - D R I V E N .')
+  puts rainbowize '*********************************************************************************************************************************************'
+  puts rainbowize Artii::Base.new(font: 'slant').asciify('T E S T - D R I V E N .')
+  puts rainbowize '*********************************************************************************************************************************************'
+
+  # `git push origin master`
 else
-  puts Artii::Base.new.asciify result
+  puts Rainbow(Artii::Base.new.asciify result).red
 end
 
 `rm patch`

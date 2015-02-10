@@ -48,7 +48,13 @@ def print_jenkins_output(build, offset)
     offset = job_output['size']
   end
 
-  @client.job.get_build_details(@target_job, build)['result']
+
+  loop do
+    details = @client.job.get_build_details(@target_job, build)
+    return details['result'] if details['result']
+    sleep 5
+  end
+
 end
 
 def start_test_driving(tracking_id)
@@ -93,7 +99,7 @@ start_test_driving(tracking_id)
 
 build = get_build_number(id_param, 120)
 
-result = print_jenkins_output(build, offset)
+  result = print_jenkins_output(build, offset)
 
 if result == 'SUCCESS' || result == 'UNSTABLE'
   puts rainbowize '*********************************************************************************************************************************************'

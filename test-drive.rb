@@ -16,18 +16,22 @@ COLORS = [
 ]
 
 def jenkins_url
-  '***REMOVED***'
+  'jenkins_server'
 end
 
 def username
-  '***REMOVED***'
+  'username'
 end
 
 def api_key
-  '***REMOVED***'
+  'api_key'
 end
 
-@target_job = '***REMOVED***'
+def patch_file
+  'patch_file_name'
+end
+
+@target_job = 'TargetJob'
 
 def get_build_number(id_param, timeout_in_seconds)
   (timeout_in_seconds/10).times do
@@ -58,14 +62,14 @@ def print_jenkins_output(build, offset)
 end
 
 def start_test_driving(tracking_id)
-  res = `curl -i #{jenkins_url}/job/#{@target_job}/build -F file0=@patch -F json='{"parameter": [{"name":"patch", "file":"file0"}, {"name":"TRACKING_ID", "value":"#{tracking_id}"}]}' --user '#{username}':'#{api_key}'`
+  res = `curl -i #{jenkins_url}/job/#{@target_job}/build -F file0=@#{patch_file} -F json='{"parameter": [{"name":"#{patch_file}", "file":"file0"}, {"name":"TRACKING_ID", "value":"#{tracking_id}"}]}' --user '#{username}':'#{api_key}'`
   raise "Failed to send patch to Jenkins: \n#{res}" unless $? == 0
 end
 
 debug = false
 
 def create_patch
-  `git pull --rebase && git diff --binary origin > patch`
+  `git pull --rebase && git diff --binary origin > #{patch_file}`
   unless $? == 0
     raise 'Failed to create patch'
   end
@@ -111,4 +115,4 @@ else
   puts Rainbow(Artii::Base.new.asciify result).red
 end
 
-`rm patch`
+`rm #{patch_file}`

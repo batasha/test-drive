@@ -1,0 +1,101 @@
+#!/usr/bin/env ruby
+
+require 'optparse'
+require 'methadone'
+require 'jenkins_api_client'
+require 'uuidtools'
+require 'artii'
+require 'rainbow'
+require 'test/drive'
+
+class App
+  include Methadone::Main
+  include Methadone::CLILogging
+  include Test::Drive
+
+  main do |jenkins_url, user, api_key|# Add args you want: |like,so|
+    # your program code here
+    # You can access CLI options via
+    # the options Hash
+
+    # repo_name = `basename $(git remote show -n origin | grep Fetch | cut -d: -f2-)`.split('.').first
+
+    @client = JenkinsApi::Client.new :server_url => jenkins_url,
+                                     :username => user,
+                                     :password => api_key,
+                                     :log_level => 1
+
+    create_patch
+
+    if debug
+      puts File.readlines File.open 'patch'
+    end
+
+    tracking_id = UUIDTools::UUID.random_create.to_s
+    id_param = {'name' => 'TRACKING_ID', 'value' => tracking_id}
+    offset = 0
+
+    start_test_driving(tracking_id)
+
+    build = get_build_number(id_param, 120)
+
+    result = print_jenkins_output(build, offset)
+
+    if result == 'SUCCESS' || result == 'UNSTABLE'
+      puts rainbowize '*********************************************************************************************************************************************'
+      puts rainbowize Artii::Base.new(font: 'slant').asciify('T E S T - D R I V E N .')
+      puts rainbowize '*********************************************************************************************************************************************'
+
+      # `git push origin master`
+    else
+      puts Rainbow(Artii::Base.new.asciify result).red
+    end
+
+    `rm #{options['patch']}`
+  end
+
+  # supplemental methods here
+
+
+  # Declare command-line interface here
+
+  # description "one line description of your app"
+  #
+  # Accept flags via:
+  # on("--flag VAL","Some flag")
+  # options[flag] will contain VAL
+
+  options['patch'] = 'patch'
+  on '--file patch_file', 'path to patch file' do |patch_file|
+    options['patch'] = patch_file
+  end
+
+  options['target_job'] = 'TestDrive'
+  on '--job target_job', 'Jenkins job to be triggered' do |target_job|
+    options['target_job'] = target_job
+  end
+
+  #
+  # Specify switches via:
+  # on("--[no-]switch","Some switch")
+  #
+  # Or, just call OptionParser methods on opts
+  #
+  # Require an argument
+  # arg :some_arg
+
+  arg :jenkins_url, 'URL for the Jenkins server'
+  arg :user, 'Jenkins user ID'
+  arg :api_key, 'Jenkins API token'
+  #
+  # # Make an argument optional
+  # arg :optional_arg, :optional
+
+  version Test::Drive::VERSION
+
+  description 'A simple command-line tool for running a Jenkins test job before pushing code to the remote repo'
+
+  use_log_level_option :toggle_debug_on_signal => 'USR1'
+
+  go!
+end

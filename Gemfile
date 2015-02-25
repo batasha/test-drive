@@ -1,6 +1,4 @@
 source 'https://rubygems.org'
 
-gem 'jenkins_api_client'
-gem 'uuidtools'
-gem 'artii'
-gem 'rainbow'
+# Specify your gem's dependencies in test.gemspec
+gemspec

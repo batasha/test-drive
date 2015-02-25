@@ -17,18 +17,23 @@ class App
     # your program code here
     # You can access CLI options via
     # the options Hash
-
     # repo_name = `basename $(git remote show -n origin | grep Fetch | cut -d: -f2-)`.split('.').first
 
-    @client = JenkinsApi::Client.new :server_url => jenkins_url,
-                                     :username => user,
-                                     :password => api_key,
+    @jenkins_url = jenkins_url
+    @user = user
+    @api_key = api_key
+    @target_job = options['target-job']
+    
+
+    @client = JenkinsApi::Client.new :server_url => @jenkins_url,
+                                     :username => @user,
+                                     :password => @api_key,
                                      :log_level => 1
 
     create_patch
 
-    if debug
-      puts File.readlines File.open 'patch'
+    if options['log-level'] == 'debug'
+      puts File.readlines File.open options['file']
     end
 
     tracking_id = UUIDTools::UUID.random_create.to_s
@@ -51,29 +56,73 @@ class App
       puts Rainbow(Artii::Base.new.asciify result).red
     end
 
-    `rm #{options['patch']}`
+    `rm #{options['file']}`
   end
+
+
 
   # supplemental methods here
 
 
+  def self.get_build_number(id_param, timeout_in_seconds)
+    (timeout_in_seconds/10).times do
+      sleep 10
+      if @client.job.get_build_details(@target_job, 0)['actions'][0]['parameters'].include?(id_param)
+        return @client.job.get_current_build_number @target_job
+      end
+    end
+  end
+
+  def self.print_jenkins_output(build, offset)
+    loop do
+      job_output = @client.job.get_console_output(@target_job, build, offset)
+
+      print job_output['output']
+      break unless job_output['more']
+
+      offset = job_output['size']
+    end
+
+    loop do
+      details = @client.job.get_build_details(@target_job, build)
+      return details['result'] if details['result']
+      sleep 5
+    end
+  end
+
+  def self.start_test_driving(tracking_id)
+    res = `curl -i #{@jenkins_url}/job/#{@target_job}/build -F file0=@#{options['file']} -F json='{"parameter": [{"name":"#{options['file']}", "file":"file0"}, {"name":"TRACKING_ID", "value":"#{tracking_id}"}]}' --user '#{@user}':'#{@api_key}'`
+    raise "Failed to send patch to Jenkins: \n#{res}" unless $? == 0
+  end
+
+  def self.create_patch
+    `git pull --rebase && git diff --binary origin > #{options['file']}`
+    unless $? == 0
+      raise 'Failed to create patch'
+    end
+  end
+
+  def self.rainbowize(string)
+    rainbow_string = ''
+    string.length.times { |i| rainbow_string << Rainbow(string[i]).color(COLORS[i % COLORS.length]) }
+    rainbow_string
+  end
+
   # Declare command-line interface here
 
   # description "one line description of your app"
-  #
+
+  description 'A simple command-line tool for running a Jenkins test job before pushing code to the remote repo'
+
   # Accept flags via:
   # on("--flag VAL","Some flag")
   # options[flag] will contain VAL
 
-  options['patch'] = 'patch'
-  on '--file patch_file', 'path to patch file' do |patch_file|
-    options['patch'] = patch_file
-  end
+  options['file'] = 'patch'
+  on '-f PATCH_FILE', '--file', 'Path to patch file'
 
-  options['target_job'] = 'TestDrive'
-  on '--job target_job', 'Jenkins job to be triggered' do |target_job|
-    options['target_job'] = target_job
-  end
+  options['target-job'] = 'TestDrive'
+  on '-j TARGET_JOB', '--target-job', 'Jenkins job to be triggered'
 
   #
   # Specify switches via:
@@ -92,8 +141,6 @@ class App
   # arg :optional_arg, :optional
 
   version Test::Drive::VERSION
-
-  description 'A simple command-line tool for running a Jenkins test job before pushing code to the remote repo'
 
   use_log_level_option :toggle_debug_on_signal => 'USR1'
 

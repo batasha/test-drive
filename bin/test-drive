@@ -2,121 +2,49 @@
 
 require 'optparse'
 require 'methadone'
-require 'jenkins_api_client'
 require 'uuidtools'
-require 'artii'
-require 'rainbow'
 require 'test/drive'
 
 class App
   include Methadone::Main
   include Methadone::CLILogging
   include Test::Drive
+  extend Test::Drive::Formatter
+  extend Test::Drive::GitHelper
 
-  main do |jenkins_url, user, api_key|# Add args you want: |like,so|
-    # your program code here
-    # You can access CLI options via
-    # the options Hash
-    # repo_name = `basename $(git remote show -n origin | grep Fetch | cut -d: -f2-)`.split('.').first
+
+  main do |jenkins_url, user, api_key|
 
     @jenkins_url = jenkins_url
     @user = user
     @api_key = api_key
     @target_job = options['target-job']
     
-
-    @client = JenkinsApi::Client.new :server_url => @jenkins_url,
-                                     :username => @user,
-                                     :password => @api_key,
-                                     :log_level => 1
+    @client = JenkinsClient.new @jenkins_url, @user, @api_key
 
     create_patch
-
-    if options['log-level'] == 'debug'
-      puts File.readlines File.open options['file']
-    end
+    debug File.readlines File.open options['file']
 
     tracking_id = UUIDTools::UUID.random_create.to_s
     id_param = {'name' => 'TRACKING_ID', 'value' => tracking_id}
-    offset = 0
 
-    start_test_driving(tracking_id)
+    @client.upload_file_to_job(@target_job, tracking_id, options[:file])
 
-    build = get_build_number(id_param, 120)
+    build_number = @client.get_build_number(@target_job, id_param, 120)
 
-    result = print_jenkins_output(build, offset)
+    @client.print_output(build_number, @target_job)
+    result = @client.wait_for_job_status(@target_job, build_number)
 
-    if result == 'SUCCESS' || result == 'UNSTABLE'
-      puts rainbowize '*********************************************************************************************************************************************'
-      puts rainbowize Artii::Base.new(font: 'slant').asciify('T E S T - D R I V E N .')
-      puts rainbowize '*********************************************************************************************************************************************'
+    print_result(result)
+    git_push if result == 'SUCCESS' || result == 'UNSTABLE'
 
-      # `git push origin master`
-    else
-      puts Rainbow(Artii::Base.new.asciify result).red
-    end
-
-    `rm #{options['file']}`
+    delete_patch
   end
 
 
-
-  # supplemental methods here
-
-
-  def self.get_build_number(id_param, timeout_in_seconds)
-    (timeout_in_seconds/10).times do
-      sleep 10
-      if @client.job.get_build_details(@target_job, 0)['actions'][0]['parameters'].include?(id_param)
-        return @client.job.get_current_build_number @target_job
-      end
-    end
-  end
-
-  def self.print_jenkins_output(build, offset)
-    loop do
-      job_output = @client.job.get_console_output(@target_job, build, offset)
-
-      print job_output['output']
-      break unless job_output['more']
-
-      offset = job_output['size']
-    end
-
-    loop do
-      details = @client.job.get_build_details(@target_job, build)
-      return details['result'] if details['result']
-      sleep 5
-    end
-  end
-
-  def self.start_test_driving(tracking_id)
-    res = `curl -i #{@jenkins_url}/job/#{@target_job}/build -F file0=@#{options['file']} -F json='{"parameter": [{"name":"#{options['file']}", "file":"file0"}, {"name":"TRACKING_ID", "value":"#{tracking_id}"}]}' --user '#{@user}':'#{@api_key}'`
-    raise "Failed to send patch to Jenkins: \n#{res}" unless $? == 0
-  end
-
-  def self.create_patch
-    `git pull --rebase && git diff --binary origin > #{options['file']}`
-    unless $? == 0
-      raise 'Failed to create patch'
-    end
-  end
-
-  def self.rainbowize(string)
-    rainbow_string = ''
-    string.length.times { |i| rainbow_string << Rainbow(string[i]).color(COLORS[i % COLORS.length]) }
-    rainbow_string
-  end
-
-  # Declare command-line interface here
-
-  # description "one line description of your app"
-
-  description 'A simple command-line tool for running a Jenkins test job before pushing code to the remote repo'
-
-  # Accept flags via:
-  # on("--flag VAL","Some flag")
-  # options[flag] will contain VAL
+  arg :jenkins_url, 'URL for the Jenkins server'
+  arg :user, 'Jenkins user ID'
+  arg :api_key, 'Jenkins API token'
 
   options['file'] = 'patch'
   on '-f PATCH_FILE', '--file', 'Path to patch file'
@@ -124,21 +52,8 @@ class App
   options['target-job'] = 'TestDrive'
   on '-j TARGET_JOB', '--target-job', 'Jenkins job to be triggered'
 
-  #
-  # Specify switches via:
-  # on("--[no-]switch","Some switch")
-  #
-  # Or, just call OptionParser methods on opts
-  #
-  # Require an argument
-  # arg :some_arg
 
-  arg :jenkins_url, 'URL for the Jenkins server'
-  arg :user, 'Jenkins user ID'
-  arg :api_key, 'Jenkins API token'
-  #
-  # # Make an argument optional
-  # arg :optional_arg, :optional
+  description 'A simple command-line tool for running a Jenkins test job before pushing code to the remote repo'
 
   version Test::Drive::VERSION
 
@@ -146,3 +61,4 @@ class App
 
   go!
 end
+

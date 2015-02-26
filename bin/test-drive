@@ -15,14 +15,16 @@ class App
 
   main do |jenkins_url, user, api_key|
 
+    TestDrive.start(jenkins_url, user, api_key, @target_job)
+
     @jenkins_url = jenkins_url
     @user = user
     @api_key = api_key
     @target_job = options['target-job']
-    
+
     @client = JenkinsClient.new @jenkins_url, @user, @api_key
 
-    create_patch
+    create_patch options['file']
     debug File.readlines File.open options['file']
 
     tracking_id = UUIDTools::UUID.random_create.to_s
@@ -38,7 +40,7 @@ class App
     print_result(result)
     git_push if result == 'SUCCESS' || result == 'UNSTABLE'
 
-    delete_patch
+    delete_patch options['file']
   end
 
 

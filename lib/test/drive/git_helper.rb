@@ -1,15 +1,15 @@
 module Test
   module Drive
     module GitHelper
-      def create_patch
-        `git pull --rebase && git diff --binary origin > #{options['file']}`
-        unless $? == 0
-          raise 'Failed to create patch'
+      def create_patch filename
+        res = sh "git pull --rebase && git diff --binary origin > #{filename}"
+        unless res == 0
+          raise IOError.new 'Failed to create patch'
         end
       end
 
-      def delete_patch
-        `rm #{options['file']}`
+      def delete_patch filename
+        `rm #{filename}`
       end
 
       def git_push

@@ -3,6 +3,8 @@ require 'jenkins_api_client'
 module Test
   module Drive
     class JenkinsClient
+      attr_accessor :client
+
       def initialize jenkins_url, user, api_key
         @jenkins_url = jenkins_url
         @user = user
@@ -14,13 +16,15 @@ module Test
                                :log_level => 1
       end
 
-      def get_build_number(target_job, tracking_id, timeout_in_seconds)
+      def get_build_number(target_job, tracking_id, timeout_in_seconds, sleep_interval=10)
         (timeout_in_seconds/10).times do
-          sleep 10
-          if @client.job.get_build_details(target_job, 0)['actions'][0]['parameters'].include?(tracking_id)
-            return @client.job.get_current_build_number target_job
+          sleep sleep_interval
+          build_details = @client.job.get_build_details(target_job, 0)
+          if build_details['actions'][0]['parameters'].include?(tracking_id)
+            return build_details['number']
           end
         end
+        raise 'Build number not found within the time specified!'
       end
 
       def print_output(build_number, target_job)

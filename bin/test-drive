@@ -15,7 +15,6 @@ class App
 
   main do |jenkins_url, user, api_key|
 
-    TestDrive.start(jenkins_url, user, api_key, @target_job)
 
     @jenkins_url = jenkins_url
     @user = user
@@ -29,7 +28,6 @@ class App
 
     tracking_id = UUIDTools::UUID.random_create.to_s
     id_param = {'name' => 'TRACKING_ID', 'value' => tracking_id}
-
     @client.upload_file_to_job(@target_job, tracking_id, options[:file])
 
     build_number = @client.get_build_number(@target_job, id_param, 120)

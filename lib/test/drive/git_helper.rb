@@ -1,6 +1,10 @@
+require 'methadone'
+
 module Test
   module Drive
     module GitHelper
+      include Methadone::SH
+
       def create_patch filename
         res = sh "git pull --rebase && git diff --binary origin > #{filename}"
         unless res == 0

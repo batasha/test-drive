@@ -10,7 +10,7 @@ Gem::Specification.new do |spec|
   spec.email         = ["nbadillo@amplify.com"]
   spec.summary       = "Test-Drive for Jenkins"
   spec.description   = "A simple command-line tool for running a Jenkins test job before pushing code to the remote repo"
-  spec.homepage      = ""
+  spec.homepage      = "https://github.com/amplify-education/test-drive"
   spec.license       = "mit"
 
   spec.files         = `git ls-files -z`.split("\x0")

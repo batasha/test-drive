@@ -4,20 +4,26 @@ module Test
   module Drive
     module GitHelper
       include Methadone::SH
+      include Methadone::CLILogging
 
       def create_patch filename
-        res = sh "git pull --rebase && git diff --binary origin > #{filename}"
+        sh 'git pull --rebase'
+
+        res = sh 'git diff --binary origin' do |stdout|
+          File.open(filename, 'w') { |f| f.write stdout }
+        end
+
         unless res == 0
           raise IOError.new 'Failed to create patch'
         end
       end
 
       def delete_patch filename
-        `rm #{filename}`
+        sh "rm #{filename}"
       end
 
       def git_push
-        `git push origin master`
+        sh 'git push origin master'
       end
     end
   end

@@ -27,7 +27,7 @@ module Test
         raise 'Build number not found within the time specified!'
       end
 
-      def print_output(build_number, target_job)
+      def print_output(build_number, target_job, sleep_interval=5)
         offset = 0
         loop do
           job_output = @client.job.get_console_output(target_job, build_number, offset)
@@ -36,6 +36,7 @@ module Test
           break unless job_output['more']
 
           offset = job_output['size']
+          sleep sleep_interval
         end
       end
 

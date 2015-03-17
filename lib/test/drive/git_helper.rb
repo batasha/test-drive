@@ -19,7 +19,7 @@ module Test
       end
 
       def delete_patch filename
-        sh "rm #{filename}"
+        File.delete filename
       end
 
       def git_push

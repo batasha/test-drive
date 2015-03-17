@@ -4,13 +4,13 @@
 [![Build Status](http://img.shields.io/travis/amplify-education/test-drive.svg)][travis]
 [![Dependency Status](http://img.shields.io/gemnasium/amplify-education/test-drive.svg)][gemnasium]
 [![Code Climate](http://img.shields.io/codeclimate/github/amplify-education/test-drive/badges/gpa.svg)][codeclimate]
-[![Test Coverage](https://codeclimate.com/github/amplify-education/test-drive/badges/coverage.svg)][testcoverage]
+[![Coverage Status](https://coveralls.io/repos/amplify-education/test-drive/badge.svg)][testcoverage]
 
 [gem]: https://rubygems.org/gems/test-drive
 [travis]: http://travis-ci.org/amplify-education/test-drive
 [gemnasium]: https://gemnasium.com/amplify-education/test-drive
 [codeclimate]: https://codeclimate.com/github/amplify-education/test-drive
-[testcoverage]: https://codeclimate.com/github/amplify-education/test-drive
+[testcoverage]: https://coveralls.io/r/amplify-education/test-drive
 
 A simple command-line tool for running a Jenkins test job before pushing code to the remote repo
 

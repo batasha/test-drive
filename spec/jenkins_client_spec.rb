@@ -1,4 +1,4 @@
-require 'test/drive'
+require 'spec_helper'
 require 'json'
 include Test::Drive
 

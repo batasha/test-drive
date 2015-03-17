@@ -1,4 +1,4 @@
-require 'test/drive'
+require 'spec_helper'
 include Test::Drive::GitHelper
 
 describe 'GitHelper' do

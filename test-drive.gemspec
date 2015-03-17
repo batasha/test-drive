@@ -23,11 +23,11 @@ Gem::Specification.new do |spec|
   spec.add_runtime_dependency 'uuidtools', '~> 2.1'
   spec.add_runtime_dependency 'artii', '~> 2.1'
   spec.add_runtime_dependency 'rainbow', '~> 2.0'
+  spec.add_runtime_dependency 'highline', '~> 1.7'
 
   spec.add_development_dependency 'bundler', '~> 1.7'
   spec.add_development_dependency 'rake', '~> 10.0'
   spec.add_development_dependency 'rdoc', '~> 4.2'
   spec.add_development_dependency 'aruba', '~> 0.6'
   spec.add_development_dependency 'rspec', '~> 3.2'
-  spec.add_development_dependency 'codeclimate-test-reporter', '~> 0.4'
 end

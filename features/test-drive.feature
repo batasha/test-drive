@@ -11,11 +11,8 @@ Feature: My bootstrapped app kinda works
     And the banner should document that this app takes options
     And the following options should be documented:
       |--version     |
-      |--target-job  |
-      |--file        |
+      |--job         |
       |--log-level   |
-
-    And the banner should document that this app's arguments are:
-      |jenkins_url|which_is_required|
-      |user       |which_is_required|
-      |api_key    |which_is_required|
+      |--server      |
+      |--user        |
+      |--password    |

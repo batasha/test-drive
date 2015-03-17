@@ -4,6 +4,8 @@ require 'optparse'
 require 'methadone'
 require 'uuidtools'
 require 'test/drive'
+require 'highline/import'
+require 'yaml'
 
 class App
   include Methadone::Main
@@ -13,22 +15,27 @@ class App
   extend Test::Drive::GitHelper
 
 
-  main do |jenkins_url, user, api_key|
+  main do
+    @server_url = options['server'] ||= ask('Jenkins URL:  ')
+    @user = options['user'] ||= ask('Jenkins User ID:  ')
+    @api_key = options['password'] ||= ask('Jenkins Password/API Token:  ')
+    @target_job = options['job'] ||= ask('Jenkins job to trigger:  ')
 
 
-    @jenkins_url = jenkins_url
-    @user = user
-    @api_key = api_key
-    @target_job = options['target-job']
+    config_file = File.expand_path('.test-drive.yml', ENV['HOME'])
+    if !File.exists?(config_file) && agree('Save these credentials as default values?  ', true)
+      File.open(config_file, 'w') { |file| YAML.dump(options, file) }
+    end
 
-    @client = JenkinsClient.new @jenkins_url, @user, @api_key
+    @client = JenkinsClient.new @server_url, @user, @api_key
+    @patch_file = 'patch'
 
-    create_patch options['file']
-    debug File.readlines File.open options['file']
+    create_patch @patch_file
+    debug File.readlines File.open @patch_file
 
     tracking_id = UUIDTools::UUID.random_create.to_s
     id_param = {'name' => 'TRACKING_ID', 'value' => tracking_id}
-    @client.upload_file_to_job(@target_job, tracking_id, options[:file])
+    @client.upload_file_to_job(@target_job, tracking_id, @patch_file)
 
     build_number = @client.get_build_number(@target_job, id_param, 120)
 
@@ -38,19 +45,15 @@ class App
     print_result(result)
     git_push if result == 'SUCCESS' || result == 'UNSTABLE'
 
-    delete_patch options['file']
+    delete_patch @patch_file
   end
 
+  defaults_from_config_file '.test-drive.yml'
 
-  arg :jenkins_url, 'URL for the Jenkins server'
-  arg :user, 'Jenkins user ID'
-  arg :api_key, 'Jenkins API token'
-
-  options['file'] = 'patch'
-  on '-f PATCH_FILE', '--file', 'Path to patch file'
-
-  options['target-job'] = 'TestDrive'
-  on '-j TARGET_JOB', '--target-job', 'Jenkins job to be triggered'
+  on '-s JENKINS_URL', '--server', 'URL for the Jenkins server'
+  on '-u USER', '--user', 'Jenkins user ID'
+  on '-p API_KEY', '--password', 'Jenkins password or API token'
+  on '-j TARGET_JOB', '--job', 'Jenkins job to be triggered'
 
 
   description 'A simple command-line tool for running a Jenkins test job before pushing code to the remote repo'

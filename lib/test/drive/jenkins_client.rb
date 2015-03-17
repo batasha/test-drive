@@ -6,7 +6,7 @@ module Test
       attr_accessor :client
 
       def initialize jenkins_url, user, api_key
-        @jenkins_url = jenkins_url
+        @server_url = jenkins_url
         @user = user
         @api_key = api_key
 
@@ -49,7 +49,7 @@ module Test
       end
 
       def upload_file_to_job(target_job, tracking_id, path_to_file)
-        res = `curl -i #{@jenkins_url}/job/#{target_job}/build -F file0=@#{path_to_file} -F json='{"parameter": [{"name":"#{path_to_file}", "file":"file0"}, {"name":"TRACKING_ID", "value":"#{tracking_id}"}]}' --user '#{@user}':'#{@api_key}'`
+        res = `curl -i #{@server_url}/job/#{target_job}/build -F file0=@#{path_to_file} -F json='{"parameter": [{"name":"#{path_to_file}", "file":"file0"}, {"name":"TRACKING_ID", "value":"#{tracking_id}"}]}' --user '#{@user}':'#{@api_key}'`
         raise "Failed to send patch to Jenkins: \n#{res}" unless $? == 0
       end
     end

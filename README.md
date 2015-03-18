@@ -47,18 +47,20 @@ A simple command-line tool for running a Jenkins test job before pushing code to
 This app assumes that you have a Jenkins job already configured as follows:
 
 * It takes a file parameter called 'patch'
-* It pulls or your source code from origin/master and executes a shell command that runs
+* It pulls your source code from origin/master and executes a shell command that runs
 
-
-      echo "" >> ${WORKSPACE}/patch
-      git apply ${WORKSPACE}/patch
+```
+    echo "" >> ${WORKSPACE}/patch
+    git apply ${WORKSPACE}/patch
+```
 
 * It then executes your desired test suite and runs
 
+```
+    git apply --reverse ${WORKSPACE}/patch
+```
 
-      git apply --reverse ${WORKSPACE}/patch
-
-  to teardown (optional but recommended)
+   to teardown (optional but recommended)
 
 ## Local Config
 

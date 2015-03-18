@@ -12,7 +12,7 @@
 [codeclimate]: https://codeclimate.com/github/amplify-education/test-drive
 [testcoverage]: https://coveralls.io/r/amplify-education/test-drive
 
-A simple command-line tool for running a Jenkins test job before pushing code to the remote repo
+A simple command-line tool for running a Jenkins test job before pushing code to a remote repo
 
 ## Installation
 
@@ -20,32 +20,58 @@ A simple command-line tool for running a Jenkins test job before pushing code to
 
 ## Usage
 
-    $ test-drive --help
-    Usage: test-drive [options] jenkins_url user api_key
+    $ test-drive -h
     
-    A simple command-line tool for running a Jenkins test job before pushing code to the remote repo
+    Usage: test-drive [options]
     
-    v0.0.1
+    A simple command-line tool for running a Jenkins test job before pushing code to a remote repo
+    
+    v0.0.3
     
     Options:
         -h, --help                       Show command line help
-        -f, --file PATCH_FILE            Path to patch file
-                                         (default: patch)
-        -j, --target-job TARGET_JOB      Jenkins job to be triggered
-                                         (default: TestDrive)
+        -s, --server JENKINS_URL         URL for the Jenkins server
+        -u, --user USER                  Jenkins user ID
+        -p, --password API_KEY           Jenkins password or API token
+        -j, --job TARGET_JOB             Jenkins job to be triggered
+        -n, --[no-]push                  Option to enable (or suppress) pushing to the remote repo
             --version                    Show help/version info
             --log-level LEVEL            Set the logging level
                                          (debug|info|warn|error|fatal)
                                          (Default: info)
     
-    Arguments:
-    
-        jenkins_url
-            URL for the Jenkins server
-        user
-            Jenkins user ID
-        api_key
-            Jenkins API token
+    Default values can be placed in ~/.test-drive.yml
+
+## Jenkins Config
+
+This app assumes that you have a Jenkins job already configured as follows:
+
+* It takes a file parameter called 'patch'
+* It pulls or your source code from origin/master and executes a shell command that runs
+
+
+      echo "" >> ${WORKSPACE}/patch
+      git apply ${WORKSPACE}/patch
+
+* It then executes your desired test suite and runs
+
+
+      git apply --reverse ${WORKSPACE}/patch
+
+  to teardown (optional but recommended)
+
+## Local Config
+
+On first run, you will have the option of saving your Jenkins credentials to a config 
+file at `~/.test-drive.yml`. This file may be edited to include any of the allowed 
+options as defaults.
+
+    ---
+    server: https://jenkins.your_org.com/
+    user: user@your_org.com
+    password: xxxxxxxxxxxxxxxxxxxxxxxxx
+    job: YourDefaultJob
+    push: false
 
 ## Contributing
 

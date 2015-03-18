@@ -57,7 +57,7 @@ class App
   on '-n', '--[no-]push', 'Option to enable (or suppress) pushing to the remote repo'
 
 
-  description 'A simple command-line tool for running a Jenkins test job before pushing code to the remote repo'
+  description 'A simple command-line tool for running a Jenkins test job before pushing code to a remote repo'
 
   version Test::Drive::VERSION
 

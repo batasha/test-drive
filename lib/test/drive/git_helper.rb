@@ -9,7 +9,7 @@ module Test
       def create_patch filename
         sh 'git pull --rebase'
 
-        res = sh 'git diff --binary origin' do |stdout|
+        res = sh 'git diff --binary origin/master' do |stdout|
           File.open(filename, 'w') { |f| f.write stdout }
         end
 
@@ -23,7 +23,7 @@ module Test
       end
 
       def git_push
-        sh 'git push origin master'
+        sh 'git push origin'
       end
     end
   end

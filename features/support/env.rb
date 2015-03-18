@@ -1,8 +1,10 @@
 require 'aruba/cucumber'
 require 'methadone/cucumber'
+require 'coveralls'
 
 ENV['PATH'] = "#{File.expand_path(File.dirname(__FILE__) + '/../../bin')}#{File::PATH_SEPARATOR}#{ENV['PATH']}"
 LIB_DIR = File.join(File.expand_path(File.dirname(__FILE__)),'..','..','lib')
+Coveralls.wear_merged!
 
 Before do
   # Using "announce" causes massive warnings on 1.9.2

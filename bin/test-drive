@@ -16,10 +16,10 @@ class App
 
 
   main do
-    @server_url = options['server'] ||= ask('Jenkins URL:  ')
-    @user = options['user'] ||= ask('Jenkins User ID:  ')
-    @api_key = options['password'] ||= ask('Jenkins Password/API Token:  ')
-    @target_job = options['job'] ||= ask('Jenkins job to trigger:  ')
+    @server_url = options[:server] ||= ask('Jenkins URL:  ')
+    @user = options[:user] ||= ask('Jenkins User ID:  ')
+    @api_key = options[:password] ||= ask('Jenkins Password/API Token:  ')
+    @target_job = options[:job] ||= ask('Jenkins job to trigger:  ')
 
 
     config_file = File.expand_path('.test-drive.yml', ENV['HOME'])
@@ -43,7 +43,7 @@ class App
     result = @client.wait_for_job_status(@target_job, build_number)
 
     print_result(result)
-    git_push if result == 'SUCCESS' || result == 'UNSTABLE'
+    git_push if ['SUCCESS', 'UNSTABLE'].include? result && options[:push]
 
     delete_patch @patch_file
   end
@@ -54,6 +54,7 @@ class App
   on '-u USER', '--user', 'Jenkins user ID'
   on '-p API_KEY', '--password', 'Jenkins password or API token'
   on '-j TARGET_JOB', '--job', 'Jenkins job to be triggered'
+  on '-n', '--[no-]push', 'Option to enable (or suppress) pushing to the remote repo'
 
 
   description 'A simple command-line tool for running a Jenkins test job before pushing code to the remote repo'

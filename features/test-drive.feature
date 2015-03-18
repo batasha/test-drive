@@ -16,3 +16,4 @@ Feature: My bootstrapped app kinda works
       |--server      |
       |--user        |
       |--password    |
+      |--[no-]push   |

@@ -1,5 +1,6 @@
 require 'artii'
 require 'rainbow'
+require 'terminal-notifier'
 
 module Test
   module Drive
@@ -21,6 +22,7 @@ module Test
           puts rainbowize '*********************************************************************************************************************************************'
         else
           puts Rainbow(Artii::Base.new.asciify result).red
+          notify result
         end
       end
 
@@ -29,6 +31,10 @@ module Test
         rainbow_string = ''
         string.length.times { |i| rainbow_string << Rainbow(string[i]).color(COLORS[i % COLORS.length]) }
         rainbow_string
+      end
+
+      def notify(result)
+        TerminalNotifier.notify("Status: #{result}", title: 'Test-Drive', sound: 'default')
       end
     end
   end

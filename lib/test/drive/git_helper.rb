@@ -1,5 +1,3 @@
-require 'methadone'
-
 module Test
   module Drive
     module GitHelper
